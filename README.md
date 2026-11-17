@@ -6,6 +6,8 @@
 
 Простой и быстрый трекер личного бюджета: доходы, расходы, категории, кошельки и текущий баланс. Работает как статический сайт в браузере, данные хранятся локально в `LocalStorage`.
 
+**Живая версия:** https://ksynov28-alt.github.io/TrekerBudget/
+
 ![Интерфейс Budget Tracker](preview.png)
 
 ## Возможности
@@ -98,13 +100,16 @@ python -m http.server 8000
 
 ## Публикация на GitHub Pages
 
-В проекте уже есть готовый workflow `.github/workflows/pages.yml`. Он публикует только статические файлы приложения при каждом push в ветку `main`.
+Проект уже опубликован: **https://ksynov28-alt.github.io/TrekerBudget/**
 
-1. Создайте репозиторий на GitHub и загрузите файлы проекта в ветку `main`.
-2. Откройте **Settings → Pages**.
-3. В поле **Source** выберите **GitHub Actions**.
-4. Сделайте push в `main` или запустите workflow вручную на вкладке **Actions**.
-5. После завершения деплоя сайт будет доступен по адресу `https://<username>.github.io/<repository>/`.
+Деплой выполняет workflow `.github/workflows/pages.yml`: при каждом push в `main` он собирает только статические файлы приложения (`index.html`, `styles.css`, `app.js`, `logo/logo-mark.png`, `logo/logo-64.png`) и публикует их на GitHub Pages.
+
+Чтобы опубликовать форк или копию:
+
+1. Загрузите файлы проекта в ветку `main` своего репозитория.
+2. Откройте **Settings → Pages** и в поле **Source** выберите **GitHub Actions** (workflow может включить Pages и сам).
+3. Сделайте push в `main` или запустите workflow вручную на вкладке **Actions**.
+4. После завершения деплоя сайт будет доступен по адресу `https://<username>.github.io/<repository>/`.
 
 Если предпочитаете деплой без Actions, выберите **Settings → Pages → Deploy from a branch → main / (root)** — приложение полностью статическое и готово к публикации из корня репозитория.
 
