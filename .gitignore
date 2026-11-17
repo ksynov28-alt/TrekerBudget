@@ -1,0 +1,5 @@
+node_modules/
+tz.txt
+.DS_Store
+Thumbs.db
+*.log

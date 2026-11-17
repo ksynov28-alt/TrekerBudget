@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="Budget Tracker — простой трекер личного бюджета. Доходы, расходы, категории и кошельки. Данные хранятся локально в браузере.">
+  <title>Budget Tracker — трекер личного бюджета</title>
+
+  <link rel="icon" type="image/png" sizes="64x64" href="logo/logo-64.png">
+
+  <!-- Лёгкий CSS-фреймворк (Pico.css) через CDN -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Набор SVG-иконок (используется через <use>) -->
+  <svg class="svg-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <symbol id="icon-settings" viewBox="0 0 24 24">
+      <path d="M4 6h9"></path>
+      <path d="M17 6h3"></path>
+      <circle cx="15" cy="6" r="2"></circle>
+      <path d="M4 12h2"></path>
+      <path d="M10 12h10"></path>
+      <circle cx="8" cy="12" r="2"></circle>
+      <path d="M4 18h7"></path>
+      <path d="M15 18h5"></path>
+      <circle cx="13" cy="18" r="2"></circle>
+    </symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24">
+      <path d="M12 5v14"></path>
+      <path d="M5 12h14"></path>
+    </symbol>
+    <symbol id="icon-arrow-down-left" viewBox="0 0 24 24">
+      <path d="M17 7 7 17"></path>
+      <path d="M17 17H7V7"></path>
+    </symbol>
+    <symbol id="icon-arrow-up-right" viewBox="0 0 24 24">
+      <path d="M7 17 17 7"></path>
+      <path d="M7 7h10v10"></path>
+    </symbol>
+    <symbol id="icon-trash" viewBox="0 0 24 24">
+      <path d="M3 6h18"></path>
+      <path d="M8 6V4h8v2"></path>
+      <path d="m19 6-1 14H6L5 6"></path>
+      <path d="M10 11v6"></path>
+      <path d="M14 11v6"></path>
+    </symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24">
+      <path d="M18 6 6 18"></path>
+      <path d="m6 6 12 12"></path>
+    </symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24">
+      <rect x="4" y="10" width="16" height="11" rx="2"></rect>
+      <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
+    </symbol>
+    <symbol id="icon-receipt" viewBox="0 0 24 24">
+      <path d="M6 3h12a1 1 0 0 1 1 1v17l-3-2-2 2-2-2-2 2-3-2V4a1 1 0 0 1 1-1z"></path>
+      <path d="M9 8h6"></path>
+      <path d="M9 12h6"></path>
+    </symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24">
+      <path d="m5 12 5 5L20 7"></path>
+    </symbol>
+  </svg>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <img src="logo/logo-mark.png" alt="" width="46" height="46" decoding="async">
+        </span>
+        <span class="brand-text">
+          <span class="brand-title">Budget Tracker</span>
+          <span class="brand-subtitle">Личный бюджет</span>
+        </span>
+      </div>
+
+      <button class="secondary-button settings-button" id="open-settings" type="button" aria-label="Настройки" aria-haspopup="dialog" aria-controls="settings-dialog">
+        <svg class="icon" aria-hidden="true"><use href="#icon-settings"></use></svg>
+        <span>Настройки</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-main">
+
+    <!-- Карточка баланса -->
+    <section class="balance-card" id="balance-card" aria-labelledby="balance-label">
+      <div class="balance-copy">
+        <span class="balance-label" id="balance-label">Текущий баланс</span>
+        <output class="balance-amount" id="balance" aria-live="polite">0,00 ₽</output>
+        <span class="balance-hint">Все доходы минус все расходы</span>
+      </div>
+
+      <div class="balance-stats">
+        <div class="stat">
+          <span class="stat-label">Доходы</span>
+          <span class="stat-value stat-value--income" id="total-income">0,00 ₽</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Расходы</span>
+          <span class="stat-value stat-value--expense" id="total-expense">0,00 ₽</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+
+      <!-- Форма добавления транзакции -->
+      <section class="card form-card" aria-labelledby="form-title">
+        <div class="card-heading">
+          <h2 id="form-title">Новая транзакция</h2>
+          <p class="card-subtitle">Заполните поля и нажмите «Добавить»</p>
+        </div>
+
+        <form id="transaction-form" novalidate>
+          <div class="field">
+            <label for="type">Тип</label>
+            <select id="type" name="type">
+              <option value="expense" selected>Расход</option>
+              <option value="income">Доход</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="amount">Сумма</label>
+            <div class="amount-wrap">
+              <input
+                id="amount"
+                name="amount"
+                type="text"
+                inputmode="decimal"
+                autocomplete="off"
+                placeholder="0,00"
+                aria-describedby="amount-hint"
+              >
+              <span class="amount-currency" aria-hidden="true">₽</span>
+            </div>
+            <small class="field-hint" id="amount-hint">Например: 1500,50</small>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="category">Категория</label>
+              <select id="category" name="category"></select>
+            </div>
+
+            <div class="field">
+              <label for="wallet">Кошелёк</label>
+              <select id="wallet" name="wallet"></select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="date">Дата</label>
+            <input id="date" name="date" type="date">
+          </div>
+
+          <div class="field">
+            <label for="comment">Комментарий <span class="optional">необязательно</span></label>
+            <input
+              id="comment"
+              name="comment"
+              type="text"
+              maxlength="120"
+              autocomplete="off"
+              placeholder="Например: продукты на неделю"
+            >
+          </div>
+
+          <button class="add-button" type="submit">
+            <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+            Добавить
+          </button>
+        </form>
+      </section>
+
+      <!-- Последние транзакции -->
+      <section class="card list-card" aria-labelledby="list-title">
+        <div class="card-heading list-heading">
+          <div>
+            <h2 id="list-title">Последние транзакции</h2>
+            <p class="card-subtitle">10 последних записей по дате</p>
+          </div>
+          <span class="count-badge" id="transactions-count">0</span>
+        </div>
+
+        <ul class="transactions" id="transactions-list"></ul>
+
+        <div class="empty-state" id="empty-state">
+          <span class="empty-icon" aria-hidden="true">
+            <svg class="icon"><use href="#icon-receipt"></use></svg>
+          </span>
+          <p class="empty-title">Пока нет транзакций</p>
+          <p class="empty-text">Добавьте первую запись с помощью формы.</p>
+        </div>
+      </section>
+    </div>
+
+    <p class="storage-note">
+      <svg class="icon" aria-hidden="true"><use href="#icon-lock"></use></svg>
+      Данные хранятся только в вашем браузере (LocalStorage).
+    </p>
+  </main>
+
+  <!-- Модальное окно настроек -->
+  <dialog id="settings-dialog" aria-labelledby="settings-title">
+    <article>
+      <header class="dialog-header">
+        <div>
+          <h2 id="settings-title">Настройки</h2>
+          <p>Управляйте категориями и кошельками</p>
+        </div>
+        <button class="icon-button dialog-close" id="close-settings" type="button" aria-label="Закрыть настройки">
+          <svg class="icon" aria-hidden="true"><use href="#icon-close"></use></svg>
+        </button>
+      </header>
+
+      <div class="dialog-body">
+        <section class="settings-section" aria-labelledby="categories-title">
+          <h3 id="categories-title">Категории</h3>
+          <p class="settings-hint">Стандартные категории удалить нельзя — только добавленные вами.</p>
+
+          <div class="category-columns">
+            <div class="settings-panel">
+              <h4><span class="dot dot--income" aria-hidden="true"></span>Доходы</h4>
+              <ul class="settings-list" id="income-categories-list"></ul>
+              <form class="inline-add" data-add-category="income">
+                <input type="text" maxlength="40" placeholder="Новая категория" aria-label="Новая категория дохода">
+                <button class="icon-button" type="submit" aria-label="Добавить категорию дохода">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+                </button>
+              </form>
+            </div>
+
+            <div class="settings-panel">
+              <h4><span class="dot dot--expense" aria-hidden="true"></span>Расходы</h4>
+              <ul class="settings-list" id="expense-categories-list"></ul>
+              <form class="inline-add" data-add-category="expense">
+                <input type="text" maxlength="40" placeholder="Новая категория" aria-label="Новая категория расхода">
+                <button class="icon-button" type="submit" aria-label="Добавить категорию расхода">
+                  <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section" aria-labelledby="wallets-title">
+          <h3 id="wallets-title">Кошельки</h3>
+          <p class="settings-hint">Стандартные кошельки удалить нельзя — только добавленные вами.</p>
+
+          <div class="settings-panel">
+            <ul class="settings-list" id="wallets-list"></ul>
+            <form class="inline-add" data-add-wallet>
+              <input type="text" maxlength="40" placeholder="Новый кошелёк" aria-label="Новый кошелёк">
+              <button class="icon-button" type="submit" aria-label="Добавить кошелёк">
+                <svg class="icon" aria-hidden="true"><use href="#icon-plus"></use></svg>
+              </button>
+            </form>
+          </div>
+        </section>
+      </div>
+
+      <footer class="dialog-footer">
+        <button class="secondary-button" id="done-settings" type="button">Готово</button>
+      </footer>
+    </article>
+  </dialog>
+
+  <!-- Шаблон строки транзакции -->
+  <template id="transaction-template">
+    <li class="transaction">
+      <span class="transaction-icon" aria-hidden="true">
+        <svg class="icon"><use href="#icon-arrow-down-left"></use></svg>
+      </span>
+      <div class="transaction-main">
+        <div class="transaction-top">
+          <span class="transaction-category"></span>
+          <span class="transaction-amount"></span>
+        </div>
+        <div class="transaction-bottom">
+          <span class="transaction-meta"></span>
+          <span class="transaction-comment"></span>
+        </div>
+      </div>
+      <button class="icon-button transaction-delete" type="button" aria-label="Удалить транзакцию">
+        <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg>
+      </button>
+    </li>
+  </template>
+
+  <!-- Всплывающее уведомление -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
